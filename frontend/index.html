@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>P-15 | Campus Rescue AI</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">✚</span><div><strong>Campus Rescue AI</strong><small>Intelligent Emergency Response Agent · P-15</small></div></div>
+    <div class="tag">University project <span class="live-dot"></span></div>
+  </header>
+  <main>
+    <div class="heading"><div><p class="eyebrow">LIVE CAMPUS SIMULATOR</p><h1>Emergency response dashboard</h1><p class="sub">Register → dispatch response → plan the matching emergency exit. Every route explains its A* decisions.</p></div><button class="btn light" id="demo">+ Try 3 sample requests</button></div>
+    <section class="stats">
+      <div class="stat"><span>Total requests</span><strong id="stat-total">0</strong></div>
+      <div class="stat"><span>Waiting</span><strong id="stat-waiting">0</strong></div>
+      <div class="stat"><span>Available vehicles</span><strong id="stat-available">3</strong></div>
+      <div class="stat"><span>Completed</span><strong id="stat-done">0</strong></div>
+    </section>
+    <section class="workspace">
+      <div class="card map-card">
+        <div class="card-title"><div><span class="section-num">01</span><h2>Campus map & road costs</h2></div><div class="map-toggle"><button class="btn selected" id="live-view">Live routes</button><button class="btn light" id="astar-view">A* steps</button></div></div>
+        <p class="mini-guide">The original eight campus nodes stay in place, with Store added. Three clearly labeled exit gates serve Medical, Accident and Fire. Cardiac cases are included under Medical. Solid colored lines show response routes; dashed colored lines show exit plans. Click a complaint to focus it.</p>
+        <p class="scroll-hint">Scroll sideways across the map to inspect all nodes and road costs.</p>
+        <div class="map-wrap" id="map-container"><svg id="map" viewBox="-90 -45 1340 880" role="img" aria-label="Campus road map with three emergency exit gates, road weights and emergency routes"></svg></div>
+        <div class="legend"><span><i class="dot blue"></i>A* exploration</span><span><i class="line solid-key"></i>Team to incident</span><span><i class="line exit-key"></i>Incident to exit</span><span><i class="line red"></i>Blocked</span><span><i class="line amber"></i>Traffic ×2</span><span><i class="line dark-line"></i>Road reserved</span></div>
+        <div id="route-colors" class="color-legend"><span class="muted">New complaints and their assigned route colours appear here.</span></div>
+        <div class="assumption">DEMO ROAD DATA · Distances are based on the fictional map (200 px = 1 km). Speed limits are sample values, not live GPS. Displayed time includes simulated traffic and occupied-road delays. Evacuation legs are plans, not physical vehicle movements.</div>
+        <div class="road-controls"><label for="road">Change a road</label><select id="road"></select><button class="btn light" id="block">Block / Reopen</button><button class="btn light" id="traffic">Traffic ×2 / Clear</button><button class="btn text-btn" id="reset">Reset roads</button></div>
+      </div>
+      <div class="side-stack">
+        <section class="card pad">
+          <div class="card-title"><div><span class="section-num">02</span><h2>Register emergency</h2></div><span class="pill muted-pill">Auto route</span></div>
+          <form id="register" class="form">
+            <label for="location">Emergency at</label><select id="location"></select>
+            <label for="event">Emergency type</label><select id="event"></select>
+            <label for="exit-target">Dedicated exit gate</label><select id="exit-target" aria-label="Dedicated emergency exit"><option>Medical Exit</option><option>Accident Exit</option><option>Fire Exit</option></select>
+            <p class="gate-preview" id="gate-preview">Selected exit: <b>Medical Exit</b> · Linked to Medical.</p>
+            <div class="quick-h-panel" id="quick-h-panel">
+              <div class="quick-h-head"><strong>Quick h(n) reference</strong><span id="quick-h-goal">Goal: Hostel</span></div>
+              <div class="quick-h-grid" id="quick-h-grid"><span class="micro">Loading heuristic values…</span></div>
+            </div>
+            <label for="level">Priority level</label><select id="level"><option>Auto</option><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select>
+            <button class="btn primary" type="submit">+ Register & find route</button>
+          </form>
+          <p class="micro">A suitable free team is assigned immediately; otherwise, the request waits in priority order.</p>
+        </section>
+        <section class="card pad heuristic-panel" id="heuristic-panel">
+          <div class="card-title"><div><span class="section-num">03</span><h2>All-node G / H / F values</h2></div></div>
+          <p class="micro" id="heuristic-target">Every node receives a numeric g and h reference for the current route.</p>
+          <div class="node-table-wrap"><table class="node-table"><thead><tr><th>Node</th><th>g★</th><th>h(n)</th><th>f★</th><th>A* g</th></tr></thead><tbody id="heuristic-nodes"></tbody></table></div>
+          <p class="micro"><b>g★:</b> full-map minimum cost from the chosen start (independently verified with Dijkstra). <b>h(n):</b> fixed estimate to the goal. <b>f★ = g★ + h.</b> <b>A* g:</b> live tentative cost (— until discovered), used by A* to choose the smallest <b>f = A* g + h.</b> Every column uses the current optimization mode.</p>
+        </section>
+        <section class="card pad directions-panel" id="directions-panel">
+          <div class="card-title"><div><span class="section-num">04</span><h2>Route & directions</h2></div></div>
+          <p class="micro" id="directions-intro">The complete route, individual turns and segment calculations appear here.</p>
+          <div class="trace-switch" id="trace-switch" hidden><button class="btn light" id="trace-dispatch">Trace response A*</button><button class="btn selected" id="trace-exit">Trace exit A*</button></div>
+          <div id="directions-content"></div>
+        </section>
+        <section class="card pad">
+          <div class="card-title"><div><span class="section-num">05</span><h2>Rescue vehicles</h2></div></div>
+          <div id="vehicles" class="vehicle-list"></div>
+          <p class="micro">✓ Complete a complaint to release its ambulance/team and free reserved roads.</p>
+        </section>
+      </div>
+    </section>
+    <section class="card queue-card">
+      <div class="card-title"><div><span class="section-num">06</span><h2>Emergency requests & automatic routes</h2></div><span class="small-muted">Critical → High → Medium → Low</span></div>
+      <div id="incidents" class="incident-list"><p class="muted">No emergencies yet.</p></div>
+    </section>
+    <section class="card explorer" id="explorer">
+      <div class="card-title"><div><span class="section-num">07</span><h2>Watch A* search</h2></div><span class="pill">f(n) = g(n) + h(n)</span></div>
+      <p class="hint">Selecting an emergency opens the A* trace from the incident to its dedicated exit (or switch to the response route on the right). Run a manual A* between any two points below.</p>
+      <form class="search-bar" id="search-form"><div><label for="origin">Origin</label><select id="origin"></select></div><span class="arrow">→</span><div><label for="goal">Destination</label><select id="goal"></select></div><div><label for="mode">Optimize for</label><select id="mode"><option value="balanced">Distance + time (points)</option><option value="distance">Shortest km</option><option value="time">Fastest minutes</option></select></div><button class="btn primary" type="submit">Run A*</button></form>
+      <div class="explain"><div class="explain-item"><b>g(n)</b><span>Accumulated cost of roads travelled</span></div><span class="plus">+</span><div class="explain-item"><b>h(n)</b><span>Lower-bound cost to destination</span></div><span class="plus">=</span><div class="explain-item"><b>f(n)</b><span>Estimated total cost</span></div></div>
+      <p class="cost-explain"><b>Balanced mode:</b> one road costs <code>distance in km + travel time in minutes</code> (score points). <b>h(n)</b> uses straight-line km + straight-line time at 30 km/h, with a tiny conservative adjustment. Congestion increases time, not distance.</p>
+      <div class="step-header"><div><h3 id="step-title">Ready for A*</h3><p id="step-description">Choose locations or register a complaint to prepare the trace.</p></div><div class="step-buttons"><button class="btn light" id="prev" disabled>← Previous</button><span id="step-count">0 / 0</span><button class="btn dark" id="next" disabled>Next step →</button></div></div>
+      <div class="astar-grid"><div class="cost-card"><span class="eyebrow">CURRENT NODE CALCULATION</span><div class="math" id="math">g + h = f</div><p id="current-note">A* expands the node with the lowest f(n).</p><div class="set-list"><span>OPEN nodes</span><strong id="open-nodes">—</strong></div><div class="set-list"><span>CLOSED nodes</span><strong id="closed-nodes">—</strong></div></div>
+      <div class="table-card"><span class="eyebrow">OPEN LIST — POSSIBLE NEXT NODES</span><table><thead><tr><th>Node</th><th>g(n)</th><th>h(n)</th><th>f(n)</th></tr></thead><tbody id="scores"><tr><td colspan="4" class="empty">Run A* to see node costs</td></tr></tbody></table></div></div>
+      <div class="neighbor-panel"><div class="card-title"><div><h3>Why did A* choose that direction?</h3><p class="mini-guide" id="decision-reason">A* compares the estimated total f(n) of candidate nodes.</p></div></div><div class="neighbor-table-wrap"><table><thead><tr><th>Next point / direction</th><th>Road g</th><th>New g(n)</th><th>h(n)</th><th>f(n)</th><th>Decision</th></tr></thead><tbody id="neighbor-choices"><tr><td colspan="6" class="empty">Run A* to see the neighbors and scores</td></tr></tbody></table></div><p class="micro" id="next-choice"></p></div>
+      <div class="result" id="result">The final path and its total cost appear on the last A* step.</div>
+    </section>
+    <footer>Educational simulation only · Road costs are sample estimates · No GPS or real emergency dispatch.</footer>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+</body>
+</html>
