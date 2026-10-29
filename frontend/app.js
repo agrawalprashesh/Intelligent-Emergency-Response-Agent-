@@ -334,4 +334,71 @@ async function main() {
     await runSearch(true,'Gate','Hostel',false);
   }catch(e){toast('Python server not connected. Run python main.py first.',true);}
 }
+/* ==========================================
+   UPDATED DASHBOARD LAYOUT
+   ========================================== */
+
+function fitDashboardLayout() {
+
+    const workspace =
+        document.querySelector('.workspace');
+
+    const mapCard =
+        workspace.querySelector('.map-card');
+
+    const sideStack =
+        workspace.querySelector('.side-stack');
+
+    const directions =
+        document.getElementById('directions-panel');
+
+    const vehicles =
+        sideStack.querySelector('section:last-child');
+
+
+    // Create new left column
+
+    const mainStack =
+        document.createElement('div');
+
+    mainStack.className = 'main-stack';
+
+
+    // Add left column to dashboard
+
+    workspace.insertBefore(mainStack, mapCard);
+
+
+    // Move map to left column
+
+    mainStack.appendChild(mapCard);
+
+
+    // Move Route & Directions below map
+
+    mainStack.appendChild(directions);
+
+
+    // Move Rescue Vehicles below directions
+
+    mainStack.appendChild(vehicles);
+
+
+    // Fit complete campus map inside the SVG
+
+    document.getElementById('map').setAttribute(
+        'viewBox',
+        '0 0 1110 690'
+    );
+
+}
+
+
+/* Apply new layout */
+
+fitDashboardLayout();
+
+
+/* Start the original application */
+
 main();
