@@ -224,3 +224,189 @@ main {max-width: min(1980px, 100vw - 24px)}
   .map-wrap {overflow:auto}
   .map-wrap svg {width:1180px;min-width:1180px;min-height:730px}
 }
+
+/* ==========================================
+   UPDATED COMPACT DASHBOARD LAYOUT
+   ========================================== */
+
+/* Main page width */
+
+main {
+    max-width: 1760px;
+    width: 100%;
+    padding: 20px 24px;
+}
+
+
+/* Main dashboard grid */
+
+.workspace {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.75fr)
+        minmax(380px, 0.95fr);
+    gap: 18px;
+    align-items: start;
+}
+
+
+/* Independent left and right columns */
+
+.main-stack,
+.side-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+    align-content: normal;
+}
+
+
+/* Remove unnecessary card spacing */
+
+.main-stack > .card,
+.side-stack > .card {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+
+
+/* Campus map card */
+
+.map-card {
+    padding: 18px;
+}
+
+
+/* Map container */
+
+.map-wrap {
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    background: #f8faff;
+    border: 1px solid #e8eef7;
+    border-radius: 12px;
+}
+
+
+/* Important: fit complete map */
+
+.map-wrap svg {
+    display: block;
+
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    height: auto;
+    min-height: 0;
+
+    aspect-ratio: 1110 / 690;
+}
+
+
+/* Road cost text */
+
+.map-wrap svg .road-tag text {
+    font-size: 16px;
+}
+
+.map-wrap svg .road-tag text.min-label {
+    font-size: 13px;
+}
+
+.map-wrap svg .road-tag text.score-label {
+    font-size: 15px;
+    font-weight: 800;
+}
+
+
+/* Normal node names */
+
+.map-wrap svg .label {
+    font-size: 19px;
+    font-weight: 800;
+}
+
+
+/* Emergency exit names */
+
+.map-wrap svg .exit-label {
+    font-size: 18px;
+}
+
+
+/* Route directions panel */
+
+.directions-panel {
+    width: 100%;
+    min-width: 0;
+}
+
+
+/* Heuristic table */
+
+.heuristic-panel {
+    width: 100%;
+    min-width: 0;
+}
+
+
+/* Make G/H/F table readable */
+
+.node-table-wrap {
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+
+/* Remove outdated sideways scrolling message */
+
+.scroll-hint {
+    display: none !important;
+}
+
+
+/* Smaller laptop screens */
+
+@media (max-width: 1050px) {
+
+    .workspace {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .main-stack,
+    .side-stack {
+        width: 100%;
+    }
+
+}
+
+
+/* Mobile screens */
+
+@media (max-width: 650px) {
+
+    main {
+        padding: 14px 10px;
+    }
+
+    .map-card {
+        padding: 10px;
+    }
+
+    .map-wrap {
+        overflow: hidden;
+    }
+
+    .map-wrap svg {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        min-height: 0;
+    }
+
+}
